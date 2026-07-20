@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Trek — Trekky Admin{% endblock %}
+
+{% block content %}
+<div style="background-color:var(--bg-off); min-height:calc(100vh - 80px); padding:3rem 0;">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-lg-8 col-xl-7">
+				<div class="card-trekky">
+					<div class="d-flex justify-content-between align-items-center mb-5">
+						<div>
+							<div class="eyebrow">Trek Management</div>
+							<h1 class="display-font" style="font-size:1.8rem; margin:0;">{{ action }} Trek</h1>
+						</div>
+						<a href="{{ url_for('admin_dashboard') }}" class="btn-trekky-outline btn-sm" style="padding:0.45rem 1rem; font-size:0.85rem;">
+							&#8592; Back
+						</a>
+					</div>
+
+					<form method="POST" action="{% if action == 'Edit' %}{{ url_for('admin_edit_trek', trek_id=trek.trek_id) }}{% else %}{{ url_for('admin_create_trek') }}{% endif %}">
+						<div class="row g-4 mb-4">
+							<div class="col-md-6">
+								<label for="trek_name" class="form-label-trekky">Trek Name</label>
+								<input type="text" class="form-control-trekky" id="trek_name" name="trek_name"
+									value="{{ trek.trek_name if trek else '' }}" required>
+							</div>
+							<div class="col-md-6">
+								<label for="trek_location" class="form-label-trekky">Location</label>
+								<input type="text" class="form-control-trekky" id="trek_location" name="trek_location"
+									value="{{ trek.trek_location if trek else '' }}" required>
+							</div>
+						</div>
+
+						<div class="row g-4 mb-4">
+							<div class="col-md-4">
+								<label for="trek_difficulty" class="form-label-trekky">Difficulty</label>
+								<select class="form-select-trekky" id="trek_difficulty" name="trek_difficulty" required>
+									<option value="Easy" {% if trek and trek.trek_difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+									<option value="Moderate" {% if trek and trek.trek_difficulty == 'Moderate' %}selected{% endif %}>Moderate</option>
+									<option value="Hard" {% if trek and trek.trek_difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+								</select>
+							</div>
+							<div class="col-md-4">
+								<label for="trek_duration" class="form-label-trekky">Duration (Days)</label>
+								<input type="number" class="form-control-trekky" id="trek_duration" name="trek_duration"
+									value="{{ trek.trek_duration if trek else '1' }}" readonly>
+							</div>
+							<div class="col-md-4">
+								<label for="trek_available_slots" class="form-label-trekky">Available Slots</label>
+								<input type="number" class="form-control-trekky" id="trek_available_slots" name="trek_available_slots"
+									min="0" value="{{ trek.trek_available_slots if trek else '10' }}" required>
+							</div>
+						</div>
+
+						<div class="row g-4 mb-4">
+							<div class="col-md-6">
+								<label for="trek_start_date" class="form-label-trekky">Start Date</label>
+								<input type="date" class="form-control-trekky" id="trek_start_date" name="trek_start_date"
+									value="{{ trek.trek_start_date if trek else '' }}" required>
+							</div>
+							<div class="col-md-6">
+								<label for="trek_end_date" class="form-label-trekky">End Date</label>
+								<input type="date" class="form-control-trekky" id="trek_end_date" name="trek_end_date"
+									value="{{ trek.trek_end_date if trek else '' }}" required>
+							</div>
+						</div>
+
+						<div class="row g-4 mb-5">
+							<div class="col-md-6">
+								<label for="trek_status" class="form-label-trekky">Operational Status</label>
+								<select class="form-select-trekky" id="trek_status" name="trek_status" required>
+									<option value="Draft" {% if trek and trek.trek_status == 'Draft' %}selected{% endif %}>Draft (Admin Only)</option>
+									<option value="Upcoming" {% if trek and trek.trek_status == 'Upcoming' %}selected{% endif %}>Upcoming (Visible, Not Open)</option>
+									<option value="Booking Open" {% if trek and trek.trek_status == 'Booking Open' %}selected{% endif %}>Booking Open (Bookable)</option>
+									<option value="Closed" {% if trek and trek.trek_status == 'Closed' %}selected{% endif %}>Closed (No Changes Allowed)</option>
+									<option value="Ongoing" {% if trek and trek.trek_status == 'Ongoing' %}selected{% endif %}>Ongoing (Active Trip)</option>
+									<option value="Completed" {% if trek and trek.trek_status == 'Completed' %}selected{% endif %}>Completed</option>
+								</select>
+							</div>
+							<div class="col-md-6">
+								<label for="assigned_staff_id" class="form-label-trekky">Assigned Staff</label>
+								<select class="form-select-trekky" id="assigned_staff_id" name="assigned_staff_id">
+									<option value="" {% if not trek or not trek.assigned_staff_id %}selected{% endif %}>No Staff Assigned</option>
+									{% for st in staff_members %}
+									<option value="{{ st.staff_id }}" {% if trek and trek.assigned_staff_id == st.staff_id %}selected{% endif %}>
+										{{ st.staff_name }} (ID: {{ st.staff_id }})
+									</option>
+									{% endfor %}
+								</select>
+							</div>
+						</div>
+
+						<button type="submit" class="btn-trekky-primary w-100 justify-content-center" style="padding:0.85rem;">
+							Commit to Database
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const startInput = document.getElementById('trek_start_date');
+	const endInput = document.getElementById('trek_end_date');
+	const durationInput = document.getElementById('trek_duration');
+
+	function updateDuration() {
+		if(startInput.value && endInput.value) {
+			const start = new Date(startInput.value);
+			const end = new Date(endInput.value);
+			const diffTime = end - start;
+			const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+			durationInput.value = diffDays > 0 ? diffDays : 1;
+		}
+	}
+
+	startInput.addEventListener('change', updateDuration);
+	endInput.addEventListener('change', updateDuration);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Flask instance folder (contains local database and local configs)
+instance/*
+!instance/trekking_database.db
+
+# Local SQLite databases
+*.db
+*.sqlite3
+
+# AntiGravity IDE local agents / logs
+.agents/
+.gemini/
+
+# Private planning, rulebooks, and system prompts
+rulebook.md
+ai_rules.md
+correction.md
+database-model.md
+Global-Rules-Website-Design-Standards.md
+dummyusers.md
+backend_prompt.txt
+formatter.py
+download_trek_images.py
+
+# Environment variables / secrets
+.env
+.flaskenv
+
+# OS-specific system files
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

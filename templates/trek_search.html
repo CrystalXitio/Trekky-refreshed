@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Expedition Directory — Trekky{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+	<!-- Page Header -->
+	<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+		<div>
+			<div class="eyebrow">Browse</div>
+			<h1 class="display-font" style="font-size:2rem; margin-bottom:0;">Expedition Directory</h1>
+		</div>
+		<a href="{{ url_for('dashboard') }}" class="btn-trekky-outline">&#8592; Back to Portal</a>
+	</div>
+
+	<!-- Filter Bar -->
+	<div class="filter-bar">
+		<form method="GET" action="{{ url_for('search_treks') }}" class="row g-3 align-items-end">
+			<div class="col-md-3 col-sm-6">
+				<label for="location" class="form-label-trekky">Location</label>
+				<input type="text" class="form-control-trekky" id="location" name="location"
+					placeholder="Region or trail name..." value="{{ location }}">
+			</div>
+			<div class="col-md-2 col-sm-6">
+				<label for="start_date" class="form-label-trekky">Start Date</label>
+				<input type="date" class="form-control-trekky" id="start_date" name="start_date"
+					value="{{ start_date }}">
+			</div>
+			<div class="col-md-2 col-sm-6">
+				<label for="end_date" class="form-label-trekky">End Date</label>
+				<input type="date" class="form-control-trekky" id="end_date" name="end_date"
+					value="{{ end_date }}">
+			</div>
+			<div class="col-md-2 col-sm-6">
+				<label for="difficulty" class="form-label-trekky">Difficulty</label>
+				<select class="form-select-trekky" id="difficulty" name="difficulty">
+					<option value="">— All —</option>
+					<option value="Easy" {% if difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+					<option value="Moderate" {% if difficulty == 'Moderate' %}selected{% endif %}>Moderate</option>
+					<option value="Hard" {% if difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+				</select>
+			</div>
+			<div class="col-md-3 d-flex gap-2 align-items-end">
+				<button type="submit" class="btn-trekky-primary flex-grow-1 justify-content-center">Filter</button>
+				<a href="{{ url_for('search_treks') }}" class="btn-trekky-outline" style="padding:0.7rem 1rem;">Reset</a>
+			</div>
+		</form>
+	</div>
+
+	<!-- Trek Cards Grid -->
+	<div class="row g-4">
+		{% for trek in treks %}
+		<div class="col-md-6 col-lg-4">
+			<div class="trek-card">
+				<!-- Card Image Area -->
+				<div class="trek-card-img"
+					{% if trek.trek_image_filename %}
+					style="background-image: url('/static/images/{{ trek.trek_image_filename }}'); background-size: cover; background-position: center;"
+					{% endif %}>
+					{% if not trek.trek_image_filename %}
+						{% if trek.trek_difficulty == 'Easy' %}
+							<div style="width:100%;height:100%;background:linear-gradient(135deg,#1C4A2E,#3a8c5e,#6dbf8e);"></div>
+						{% elif trek.trek_difficulty == 'Moderate' %}
+							<div style="width:100%;height:100%;background:linear-gradient(135deg,#7A4A00,#c4840a,#f5a623);"></div>
+						{% else %}
+							<div style="width:100%;height:100%;background:linear-gradient(135deg,#5C1010,#8B2525,#c0392b);"></div>
+						{% endif %}
+					{% endif %}
+					{% if trek.trek_difficulty == 'Easy' %}
+						<span class="trek-card-badge" style="background:rgba(0,80,30,0.82); color:#fff;">Easy</span>
+					{% elif trek.trek_difficulty == 'Moderate' %}
+						<span class="trek-card-badge" style="background:rgba(100,55,0,0.82); color:#fff;">Moderate</span>
+					{% else %}
+						<span class="trek-card-badge" style="background:rgba(80,10,10,0.82); color:#fff;">Hard</span>
+					{% endif %}
+				</div>
+
+				<!-- Card Body -->
+				<div class="trek-card-body">
+					<h3 class="trek-card-title">{{ trek.trek_name }}</h3>
+					<div class="trek-card-meta">
+						<span>&#128205; {{ trek.trek_location }}</span>
+						<span>&#128197; {{ trek.trek_duration }} Days</span>
+					</div>
+
+					<ul class="trek-card-info">
+						<li>
+							<strong>Dates</strong>
+							<span>{{ trek.trek_start_date }} to {{ trek.trek_end_date }}</span>
+						</li>
+						{% set filled = trek.bookings | selectattr('booking_status', 'equalto', 'Booked') | list | length %}
+						{% set total = trek.trek_available_slots + filled %}
+						<li>
+							<strong>Slots Filled</strong>
+							<span>{{ filled }} / {{ total }}</span>
+						</li>
+						<li>
+							<strong>Status</strong>
+							<span>
+								{% if trek.trek_status == 'Booking Open' %}
+									<span class="badge-trekky badge-success">{{ trek.trek_status }}</span>
+								{% elif trek.trek_status == 'Upcoming' %}
+									<span class="badge-trekky badge-info">{{ trek.trek_status }}</span>
+								{% elif trek.trek_status == 'Ongoing' %}
+									<span class="badge-trekky badge-warning">{{ trek.trek_status }}</span>
+								{% elif trek.trek_status == 'Completed' %}
+									<span class="badge-trekky badge-secondary">{{ trek.trek_status }}</span>
+								{% elif trek.trek_status == 'Closed' %}
+									<span class="badge-trekky badge-dark">{{ trek.trek_status }}</span>
+								{% else %}
+									<span class="badge-trekky badge-secondary">{{ trek.trek_status }}</span>
+								{% endif %}
+							</span>
+						</li>
+					</ul>
+
+					<div class="mt-auto">
+						{% if trek.trek_status == 'Open' and trek.trek_available_slots > 0 %}
+							<form method="POST" action="{{ url_for('book_trek', trek_id=trek.trek_id) }}">
+								<button type="submit" class="btn-trekky-primary w-100 justify-content-center">
+									Secure Booking
+								</button>
+							</form>
+						{% else %}
+							<button class="btn-trekky-outline w-100 justify-content-center" disabled
+								style="opacity:0.55; cursor:not-allowed;">
+								{% if trek.trek_available_slots == 0 %}Fully Booked{% else %}Unavailable{% endif %}
+							</button>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+		</div>
+		{% else %}
+		<div class="col-12">
+			<div class="card-trekky text-center py-5">
+				<p style="font-size:2.5rem; margin-bottom:1rem;">&#127956;</p>
+				<h4 class="display-font text-muted-trekky mb-2">No expeditions found</h4>
+				<p style="font-family:'DM Sans',sans-serif; color:var(--muted); font-size:0.95rem; margin:0;">
+					Try adjusting your filters or check back soon for new treks.
+				</p>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+
+</div>
+{% endblock %}

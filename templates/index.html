@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Trekky — Discover Your Next Expedition{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ── -->
+<section class="hero-full" aria-label="Homepage hero">
+	<div class="container hero-content w-100">
+		{% if current_user.is_authenticated %}
+		<!-- Authenticated state -->
+		<div class="hero-auth-card">
+			<div class="eyebrow" style="background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8);">
+				Active Session
+			</div>
+			<h2 style="font-family:'Playfair Display',serif; color:#fff; font-size:1.6rem; margin-bottom:0.5rem;">
+				Welcome back.
+			</h2>
+			<p style="font-family:'DM Sans',sans-serif; color:rgba(255,255,255,0.75); font-size:0.95rem; margin-bottom:1.5rem;">
+				Signed in as {{ current_user.user_email }}
+				<br><span style="font-size:0.82rem; opacity:0.7;">Role: {{ current_user.user_role|capitalize }}</span>
+			</p>
+			<div class="d-flex gap-3 flex-wrap">
+				<a href="{{ url_for('dashboard') }}" class="btn-trekky-primary">Go to Dashboard</a>
+				<a href="{{ url_for('logout') }}" class="btn-trekky-outline-on-dark">Sign Out</a>
+			</div>
+		</div>
+
+		{% else %}
+		<!-- Unauthenticated state — full hero -->
+		<div class="hero-eyebrow">
+			<span class="hero-eyebrow-dot"></span>
+			Premium Trekking Expeditions
+		</div>
+		<h1 class="hero-title">
+			Discover Special<br>Treks for Top<br>Destinations
+		</h1>
+		<p class="hero-sub">
+			A curated collection of alpine routes, technical ascents, and multi-day backcountry trails — guided by seasoned professionals.
+		</p>
+		<p class="hero-offer">Special Introductory Offer</p>
+		<p class="hero-offer-highlight">Early Access Pricing Now Open</p>
+		<div class="d-flex gap-3 flex-wrap">
+			<a href="{{ url_for('register') }}" class="btn-trekky-primary" id="hero-register-btn">Register Account</a>
+			<a href="{{ url_for('login') }}" class="btn-trekky-outline-on-dark" id="hero-login-btn">Access Portal</a>
+		</div>
+		{% endif %}
+	</div>
+</section>
+
+{% if not current_user.is_authenticated %}
+
+<!-- ── ABOUT SECTION ── -->
+<section class="about-section">
+	<div class="container">
+		<div class="row align-items-center g-5">
+			<!-- Left: copy -->
+			<div class="col-lg-5">
+				<div class="eyebrow">About Us</div>
+				<h2 class="section-heading">Handpicked trails,<br>honest journeys</h2>
+				<p class="section-sub mb-5">
+					Carefully curated expeditions that combine challenge, safety, and the raw beauty of the natural world. Every route is vetted, every guide experienced.
+				</p>
+
+				<div class="about-feature-item">
+					<div class="about-feature-icon">&#127968;</div>
+					<div class="about-feature-text">
+						<h6>Discover Distinctive Trails Worldwide</h6>
+						<p>Unique treks across India's diverse terrain designed to make every expedition unforgettable.</p>
+					</div>
+				</div>
+
+				<div class="about-feature-item">
+					<div class="about-feature-icon">&#128737;</div>
+					<div class="about-feature-text">
+						<h6>Expert-Led Safety Standards</h6>
+						<p>All treks are led by Trekky-approved staff with field training and real-time coordination.</p>
+					</div>
+				</div>
+
+				<div class="about-feature-item">
+					<div class="about-feature-icon">&#128203;</div>
+					<div class="about-feature-text">
+						<h6>Seamless Booking &amp; Tracking</h6>
+						<p>Book instantly, track status in real-time, and manage your entire trekking history from one portal.</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Right: feature cards -->
+			<div class="col-lg-7">
+				<div class="row g-4">
+					<div class="col-sm-6">
+						<div class="feature-card">
+							<span class="feature-card-icon">&#127956;</span>
+							<h5>Curated Routes</h5>
+							<p>Every trek in our directory is personally reviewed and approved before it goes live to trekkers.</p>
+						</div>
+					</div>
+					<div class="col-sm-6">
+						<div class="feature-card">
+							<span class="feature-card-icon">&#129333;</span>
+							<h5>Certified Guides</h5>
+							<p>Our staff undergo a structured approval process — only verified professionals lead expeditions.</p>
+						</div>
+					</div>
+					<div class="col-sm-6">
+						<div class="feature-card">
+							<span class="feature-card-icon">&#127760;</span>
+							<h5>Real-Time Slots</h5>
+							<p>Live slot availability updated instantly as bookings come in, so you never miss an opening.</p>
+						</div>
+					</div>
+					<div class="col-sm-6">
+						<div class="feature-card">
+							<span class="feature-card-icon">&#9733;</span>
+							<h5>Trekker Reviews</h5>
+							<p>Completed trek? Leave a review. Future trekkers benefit from authentic community feedback.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ── CTA STRIP ── -->
+<section style="background-color: var(--accent); padding: 4rem 0;">
+	<div class="container text-center">
+		<h2 style="font-family:'Playfair Display',serif; color:#fff; font-size:2.2rem; margin-bottom:1rem;">
+			Ready to lace up your boots?
+		</h2>
+		<p style="font-family:'DM Sans',sans-serif; color:rgba(255,255,255,0.8); font-size:1rem; margin-bottom:2rem; max-width:480px; margin-left:auto; margin-right:auto;">
+			Create your account today and start exploring handpicked treks from across India.
+		</p>
+		<div class="d-flex justify-content-center gap-3 flex-wrap">
+			<a href="{{ url_for('register') }}" class="btn-trekky-outline-on-dark" id="cta-register-btn">Register Now</a>
+			<a href="{{ url_for('login') }}" class="btn-trekky-primary" style="background-color:#fff; color:var(--accent);" id="cta-login-btn">Sign In</a>
+		</div>
+	</div>
+</section>
+
+{% endif %}
+
+{% endblock %}

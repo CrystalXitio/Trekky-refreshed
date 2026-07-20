@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+{% block title %}System Overview — Trekky Admin{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+	<!-- Page Header -->
+	<div class="page-header">
+		<div class="eyebrow">Administration</div>
+		<h1 class="display-font" style="font-size:2rem; margin-bottom:0.25rem;">System Overview</h1>
+		<p>Manage treks, users, bookings, and staff from this central dashboard.</p>
+	</div>
+
+	<!-- ────────────────────────────────
+		 STAT CARDS
+	 ──────────────────────────────── -->
+	<div class="row g-4 mb-5 align-items-stretch">
+		<div class="col-md-4">
+			<div class="stat-card h-100 d-flex flex-column justify-content-between">
+				<div>
+					<div class="stat-card-header">
+						<div>
+							<div class="stat-card-label">Total Treks</div>
+							<div class="stat-card-number">{{ total_treks }}</div>
+						</div>
+						<div class="stat-card-icon">&#127956;</div>
+					</div>
+				</div>
+				<div class="stat-card-breakdown">
+					<span class="stat-card-chip">Draft: {{ trek_stats.draft }}</span>
+					<span class="stat-card-chip" style="color:var(--info); border-color:var(--info);">Upcoming: {{ trek_stats.upcoming }}</span>
+					<span class="stat-card-chip" style="color:var(--success); border-color:var(--success);">Open: {{ trek_stats.open }}</span>
+					<span class="stat-card-chip" style="color:var(--warning); border-color:var(--warning);">Ongoing: {{ trek_stats.ongoing }}</span>
+					<span class="stat-card-chip">Closed: {{ trek_stats.closed }}</span>
+					<span class="stat-card-chip" style="color:var(--muted);">Completed: {{ trek_stats.completed }}</span>
+					<span class="stat-card-chip" style="color:var(--danger); border-color:var(--danger);">Cancelled: {{ trek_stats.cancelled }}</span>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="stat-card h-100 d-flex flex-column justify-content-between">
+				<div>
+					<div class="stat-card-header">
+						<div>
+							<div class="stat-card-label">Network Directory</div>
+							<div class="stat-card-number">{{ total_users }}</div>
+						</div>
+						<div class="stat-card-icon">&#128101;</div>
+					</div>
+				</div>
+				<div class="stat-card-breakdown">
+					<span class="stat-card-chip" style="color:var(--accent); border-color:var(--accent);">Trekkers: {{ total_trekkers }}</span>
+					<span class="stat-card-chip">Staff: {{ total_staff }}</span>
+					<span class="stat-card-chip" style="color:var(--danger); border-color:var(--danger);">Admins: {{ total_admins }}</span>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="stat-card h-100 d-flex flex-column justify-content-between">
+				<div>
+					<div class="stat-card-header">
+						<div>
+							<div class="stat-card-label">Total Bookings</div>
+							<div class="stat-card-number">{{ total_bookings }}</div>
+						</div>
+						<div class="stat-card-icon">&#128203;</div>
+					</div>
+				</div>
+				<div class="stat-card-breakdown">
+					<span class="stat-card-chip" style="color:var(--success); border-color:var(--success);">Booked: {{ booking_stats.booked }}</span>
+					<span class="stat-card-chip" style="color:var(--info); border-color:var(--info);">Completed: {{ booking_stats.completed }}</span>
+					<span class="stat-card-chip" style="color:var(--danger); border-color:var(--danger);">Abandoned: {{ booking_stats.abandoned }}</span>
+					<span class="stat-card-chip" style="color:var(--warning); border-color:var(--warning);">Cancelled: {{ booking_stats.cancelled }}</span>
+					<span class="stat-card-chip" style="color:var(--danger);">Refunded: {{ booking_stats.refunded }}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ────────────────────────────────
+		 TREKKING STATS CHART
+	 ──────────────────────────────── -->
+	{% if chart_data %}
+	<h2 class="display-font mb-4" style="font-size:1.5rem;">Trekking Statistics</h2>
+	<div class="card-trekky mb-5 text-center p-3">
+		<img src="data:image/png;base64,{{ chart_data }}" alt="Trekking Popularity Chart" class="img-fluid" style="max-height:400px; border-radius:var(--radius-md);">
+	</div>
+	{% endif %}
+
+	<!-- ────────────────────────────────
+		 USER DIRECTORY
+	 ──────────────────────────────── -->
+	<h2 class="display-font mb-3" style="font-size:1.5rem;" id="userDirectory">User Directory</h2>
+	<div class="filter-bar">
+		<form method="GET" action="{{ url_for('admin_dashboard') }}#userDirectory" class="row g-3 align-items-end">
+			<input type="hidden" name="t_location" value="{{ t_location }}">
+			{% for item in t_difficulty %}<input type="hidden" name="t_difficulty" value="{{ item }}">{% endfor %}
+			{% for item in t_status %}<input type="hidden" name="t_status" value="{{ item }}">{% endfor %}
+			<input type="hidden" name="t_start" value="{{ t_start }}">
+			<input type="hidden" name="t_end" value="{{ t_end }}">
+			<input type="hidden" name="b_trekker" value="{{ b_trekker }}">
+			<input type="hidden" name="b_trek" value="{{ b_trek }}">
+			<input type="hidden" name="b_staff" value="{{ b_staff }}">
+			{% for item in b_status %}<input type="hidden" name="b_status" value="{{ item }}">{% endfor %}
+
+			<div class="col-md-4 col-sm-6">
+				<label for="u_name" class="form-label-trekky">User Name / Email</label>
+				<input type="text" class="form-control-trekky" id="u_name" name="u_name" value="{{ u_name }}" placeholder="Search name or email...">
+			</div>
+			<div class="col-md-4 col-sm-6">
+				<label class="form-label-trekky">Filter by Role</label>
+				<div class="dropdown">
+					<button class="form-select-trekky text-start" type="button"
+						data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+						Select Roles
+					</button>
+					<div class="dropdown-menu filter-dropdown-menu">
+						<div class="form-check mb-2">
+							<input class="form-check-input" type="checkbox" name="u_role" value="admin" id="urAdmin" {% if 'admin' in u_role %}checked{% endif %}>
+							<label class="form-check-label" for="urAdmin">Admin</label>
+						</div>
+						<div class="form-check mb-2">
+							<input class="form-check-input" type="checkbox" name="u_role" value="staff" id="urStaff" {% if 'staff' in u_role %}checked{% endif %}>
+							<label class="form-check-label" for="urStaff">Staff</label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" name="u_role" value="trekker" id="urTrekker" {% if 'trekker' in u_role %}checked{% endif %}>
+							<label class="form-check-label" for="urTrekker">Trekker</label>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<button type="submit" class="btn-trekky-primary w-100 justify-content-center">Filter Users</button>
+			</div>
+		</form>
+	</div>
+
+	<div class="card-trekky mb-5 p-0" style="overflow:hidden;">
+		<div class="table-responsive" style="max-height:380px; overflow-y:auto;">
+			<table id="usersTable" class="table-trekky mb-0 w-100">
+				<thead>
+					<tr style="position:sticky; top:0; background-color:var(--bg-card); z-index:2; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('usersTable', 0, false)">ID <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('usersTable', 1, false)">Name <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('usersTable', 2, false)">Email <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('usersTable', 3, false)">Contact <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('usersTable', 4, false)">Role <span class="sort-arrow"></span></th>
+						<th class="text-end" style="background-color:var(--bg-card);">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for u in users %}
+					<tr>
+						<td><strong style="font-size:0.85rem;">{{ u.user_display_id }}</strong></td>
+						<td>{{ u.user_full_name }}</td>
+						<td style="font-weight:500;">{{ u.user_email }}</td>
+						<td>{{ u.user_contact_no }}</td>
+						<td>
+							{% if u.user_role == 'admin' %}
+								<span class="badge-trekky badge-danger">admin</span>
+							{% elif u.user_role == 'staff' %}
+								<span class="badge-trekky badge-info">staff</span>
+							{% elif u.user_role == 'trekker' %}
+								<span class="badge-trekky badge-success">trekker</span>
+							{% else %}
+								<span class="badge-trekky badge-secondary">{{ u.user_role }}</span>
+							{% endif %}
+						</td>
+						<td class="text-end">
+							{% if u.user_role != 'admin' and u.user_password_hash != 'BANNED' %}
+								<form method="POST" action="{{ url_for('admin_blacklist_user', user_id=u.user_id) }}" class="d-inline"
+									onsubmit="return confirm('Deactivate this user?');">
+									<button class="btn-trekky-outline btn-sm" style="padding:0.3rem 0.8rem; font-size:0.78rem; border-color:var(--warning); color:var(--warning);">Deactivate</button>
+								</form>
+							{% elif u.user_password_hash == 'BANNED' %}
+								<div class="d-flex justify-content-end gap-2">
+									<form method="POST" action="{{ url_for('admin_activate_user', user_id=u.user_id) }}" class="d-inline">
+										<button class="btn-trekky-outline btn-sm" style="padding:0.3rem 0.8rem; font-size:0.78rem; border-color:var(--success); color:var(--success);">Activate</button>
+									</form>
+									<form method="POST" action="{{ url_for('admin_delete_user', user_id=u.user_id) }}" class="d-inline"
+										onsubmit="return confirm('Permanently delete this user?');">
+										<button class="btn-trekky-outline btn-sm" style="padding:0.3rem 0.8rem; font-size:0.78rem; border-color:var(--danger); color:var(--danger);">Delete</button>
+									</form>
+								</div>
+							{% endif %}
+						</td>
+					</tr>
+					{% else %}
+					<tr><td colspan="6" class="text-center py-4" style="color:var(--muted); font-family:'DM Sans',sans-serif;">No users found.</td></tr>
+					{% endfor %}
+				</tbody>
+				<tfoot>
+					<tr style="position:sticky; bottom:0; background-color:var(--bg-card); z-index:2; box-shadow:0 -1px 2px rgba(0,0,0,0.06);">
+						<td colspan="6" class="text-center" style="padding:1.25rem; background-color:var(--bg-card);">
+							<a href="{{ url_for('admin_create_user') }}" class="btn-trekky-outline px-5">Create User</a>
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</div>
+
+	<!-- ────────────────────────────────
+		 TREKS LEDGER
+	 ──────────────────────────────── -->
+	<h2 class="display-font mb-3" style="font-size:1.5rem;" id="treksLedger">Treks Ledger</h2>
+	<div class="filter-bar">
+		<form method="GET" action="{{ url_for('admin_dashboard') }}#treksLedger" class="row g-3 align-items-end">
+			<input type="hidden" name="u_name" value="{{ u_name }}">
+			{% for item in u_role %}<input type="hidden" name="u_role" value="{{ item }}">{% endfor %}
+			<input type="hidden" name="b_trekker" value="{{ b_trekker }}">
+			<input type="hidden" name="b_trek" value="{{ b_trek }}">
+			<input type="hidden" name="b_staff" value="{{ b_staff }}">
+			{% for item in b_status %}<input type="hidden" name="b_status" value="{{ item }}">{% endfor %}
+
+			<div class="col-md-2 col-sm-6">
+				<label for="t_location" class="form-label-trekky">Location</label>
+				<input type="text" class="form-control-trekky" id="t_location" name="t_location" value="{{ t_location }}">
+			</div>
+			<div class="col-md-2 col-sm-6">
+				<label for="t_start" class="form-label-trekky">Start Date</label>
+				<input type="date" class="form-control-trekky" id="t_start" name="t_start" value="{{ t_start }}">
+			</div>
+			<div class="col-md-2 col-sm-6">
+				<label for="t_end" class="form-label-trekky">End Date</label>
+				<input type="date" class="form-control-trekky" id="t_end" name="t_end" value="{{ t_end }}">
+			</div>
+			<div class="col-md-2 col-sm-6">
+				<label class="form-label-trekky">Difficulty</label>
+				<div class="dropdown">
+					<button class="form-select-trekky text-start" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Select Difficulties</button>
+					<div class="dropdown-menu filter-dropdown-menu">
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="t_difficulty" value="Easy" id="tdEasy" {% if 'Easy' in t_difficulty %}checked{% endif %}><label class="form-check-label" for="tdEasy">Easy</label></div>
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="t_difficulty" value="Moderate" id="tdMod" {% if 'Moderate' in t_difficulty %}checked{% endif %}><label class="form-check-label" for="tdMod">Moderate</label></div>
+						<div class="form-check"><input class="form-check-input" type="checkbox" name="t_difficulty" value="Hard" id="tdHard" {% if 'Hard' in t_difficulty %}checked{% endif %}><label class="form-check-label" for="tdHard">Hard</label></div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-2 col-sm-6">
+				<label class="form-label-trekky">Status</label>
+				<div class="dropdown">
+					<button class="form-select-trekky text-start" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Select Statuses</button>
+					<div class="dropdown-menu filter-dropdown-menu">
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="t_status" value="Draft" id="tsDraft" {% if 'Draft' in t_status %}checked{% endif %}><label class="form-check-label" for="tsDraft">Draft</label></div>
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="t_status" value="Upcoming" id="tsUp" {% if 'Upcoming' in t_status %}checked{% endif %}><label class="form-check-label" for="tsUp">Upcoming</label></div>
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="t_status" value="Booking Open" id="tsBook" {% if 'Booking Open' in t_status %}checked{% endif %}><label class="form-check-label" for="tsBook">Booking Open</label></div>
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="t_status" value="Closed" id="tsClose" {% if 'Closed' in t_status %}checked{% endif %}><label class="form-check-label" for="tsClose">Closed</label></div>
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="t_status" value="Ongoing" id="tsOn" {% if 'Ongoing' in t_status %}checked{% endif %}><label class="form-check-label" for="tsOn">Ongoing</label></div>
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="t_status" value="Completed" id="tsComp" {% if 'Completed' in t_status %}checked{% endif %}><label class="form-check-label" for="tsComp">Completed</label></div>
+						<div class="form-check"><input class="form-check-input" type="checkbox" name="t_status" value="Cancelled" id="tsCanc" {% if 'Cancelled' in t_status %}checked{% endif %}><label class="form-check-label" for="tsCanc">Cancelled</label></div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-2">
+				<button type="submit" class="btn-trekky-primary w-100 justify-content-center">Filter Treks</button>
+			</div>
+		</form>
+	</div>
+
+	<div class="card-trekky mb-5 p-0" style="overflow:hidden;">
+		<div class="table-responsive" style="max-height:380px; overflow-y:auto;">
+			<table id="treksTable" class="table-trekky mb-0 w-100">
+				<thead>
+					<tr style="position:sticky; top:0; background-color:var(--bg-card); z-index:2; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('treksTable', 0, true)">ID <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('treksTable', 1, false)">Name <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('treksTable', 2, false)">Location <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('treksTable', 3, false)">Difficulty <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('treksTable', 4, false)">Staff <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('treksTable', 5, true)">Slots Filled <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('treksTable', 6, false)">Status <span class="sort-arrow"></span></th>
+						<th class="text-end" style="background-color:var(--bg-card);">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for trek in treks %}
+					<tr>
+						<td><strong style="font-size:0.85rem;">{{ trek.trek_display_id }}</strong></td>
+						<td>
+							<button type="button" class="btn p-0 border-0 align-baseline text-start" style="color:var(--ink); font-weight:600; font-family:'DM Sans',sans-serif; font-size:0.9rem; border-bottom:1px dashed var(--border-strong) !important; padding-bottom:1px;"
+								data-bs-toggle="modal" data-bs-target="#trekReviewsModal{{ trek.trek_id }}" title="Click to view reviews">
+								{{ trek.trek_name }}
+							</button>
+						</td>
+						<td>{{ trek.trek_location }}</td>
+						<td>
+							{% if trek.trek_difficulty == 'Easy' %}<span class="badge-trekky badge-success">Easy</span>
+							{% elif trek.trek_difficulty == 'Moderate' %}<span class="badge-trekky badge-warning">Moderate</span>
+							{% else %}<span class="badge-trekky badge-danger">Hard</span>{% endif %}
+						</td>
+						<td>
+							{% if trek.assigned_staff %}
+								{{ trek.assigned_staff.staff_name }} <span style="color:var(--muted); font-size:0.8rem;">({{ trek.assigned_staff.user.user_display_id }})</span>
+							{% else %}
+								<span style="color:var(--muted); font-style:italic;">Unassigned</span>
+							{% endif %}
+						</td>
+						{% set filled = trek.bookings | selectattr('booking_status', 'equalto', 'Booked') | list | length %}
+						{% set total = trek.trek_available_slots + filled %}
+						<td>{{ filled }} / {{ total }}</td>
+						<td>
+							{% if trek.trek_status == 'Draft' %}<span class="badge-trekky badge-secondary">Draft</span>
+							{% elif trek.trek_status == 'Upcoming' %}<span class="badge-trekky badge-info">Upcoming</span>
+							{% elif trek.trek_status == 'Booking Open' %}<span class="badge-trekky badge-success">Booking Open</span>
+							{% elif trek.trek_status == 'Ongoing' %}<span class="badge-trekky badge-warning">Ongoing</span>
+							{% elif trek.trek_status == 'Closed' %}<span class="badge-trekky badge-dark">Closed</span>
+							{% elif trek.trek_status == 'Completed' %}<span class="badge-trekky badge-info">Completed</span>
+							{% elif trek.trek_status == 'Cancelled' %}<span class="badge-trekky badge-danger">Cancelled</span>
+							{% else %}<span class="badge-trekky badge-secondary">{{ trek.trek_status }}</span>{% endif %}
+						</td>
+						<td class="text-end">
+							<div class="d-flex justify-content-end gap-2">
+								<a href="{{ url_for('admin_edit_trek', trek_id=trek.trek_id) }}" class="btn-trekky-outline btn-sm" style="padding:0.3rem 0.8rem; font-size:0.78rem;">Edit</a>
+								<form method="POST" action="{{ url_for('admin_delete_trek', trek_id=trek.trek_id) }}" class="d-inline"
+									onsubmit="return confirm('Confirm permanent deletion?');">
+									<button class="btn-trekky-outline btn-sm" style="padding:0.3rem 0.8rem; font-size:0.78rem; border-color:var(--danger); color:var(--danger);">Delete</button>
+								</form>
+							</div>
+						</td>
+					</tr>
+					{% else %}
+					<tr><td colspan="8" class="text-center py-4" style="color:var(--muted); font-family:'DM Sans',sans-serif;">No treks found.</td></tr>
+					{% endfor %}
+				</tbody>
+				<tfoot>
+					<tr style="position:sticky; bottom:0; background-color:var(--bg-card); z-index:2; box-shadow:0 -1px 2px rgba(0,0,0,0.06);">
+						<td colspan="8" class="text-center" style="padding:1.25rem; background-color:var(--bg-card);">
+							<a href="{{ url_for('admin_create_trek') }}" class="btn-trekky-outline px-5">Create Trek</a>
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</div>
+
+	<!-- Modals for Trek Reviews (Placed outside overflow scrollable table container) -->
+	{% for trek in all_treks %}
+	<div class="modal fade" id="trekReviewsModal{{ trek.trek_id }}" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+			<div class="modal-content" style="border-radius: var(--radius-lg); border: 1px solid var(--border);">
+				<div class="modal-header" style="background-color: var(--bg-card); border-bottom: 1px solid var(--border);">
+					<h5 class="modal-title display-font" style="font-size:1.15rem;">Reviews for {{ trek.trek_name }} <span style="font-size:0.8rem; color:var(--muted); font-family:'DM Sans',sans-serif;">({{ trek.trek_display_id }})</span></h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body text-start no-scrollbar" style="max-height:360px; overflow-y:auto; font-family:'DM Sans',sans-serif; padding:1.25rem;">
+					{% if trek.reviews %}
+					<div class="d-flex flex-column gap-3">
+						{% for rev in trek.reviews %}
+						<div class="p-3 border rounded-trekky" style="background-color:var(--bg-off);">
+							<div class="d-flex justify-content-between align-items-center mb-1">
+								<span style="font-weight:600; color:var(--ink);">
+									{{ rev.user.user_full_name or rev.user.user_email }}
+									<span style="font-size:0.8rem; color:var(--muted); font-weight:400;">({{ rev.user.user_display_id }})</span>
+								</span>
+								<span style="color:#c4840a; font-weight:600;">
+									{% for _ in range(rev.rating) %}&#9733;{% endfor %}{% for _ in range(5 - rev.rating) %}&#9734;{% endfor %}
+									<span style="font-size:0.82rem; color:var(--muted); margin-left:3px;">({{ rev.rating }}/5)</span>
+								</span>
+							</div>
+							<p class="mb-1" style="font-size:0.9rem; color:var(--ink-secondary);">"{{ rev.review_text }}"</p>
+							<small style="color:var(--muted); font-size:0.75rem;">Submitted on {{ rev.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+						</div>
+						{% endfor %}
+					</div>
+					{% else %}
+					<p style="color:var(--muted); font-style:italic; margin:0;" class="text-center py-4">
+						No reviews for this trek yet.
+					</p>
+					{% endif %}
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn-trekky-outline btn-sm" data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	{% endfor %}
+
+	<!-- ────────────────────────────────
+		 BOOKINGS LEDGER
+	 ──────────────────────────────── -->
+	<h2 class="display-font mb-3 mt-4" style="font-size:1.5rem;" id="bookingsLedger">Bookings Ledger</h2>
+	<div class="filter-bar">
+		<form method="GET" action="{{ url_for('admin_dashboard') }}#bookingsLedger" class="row g-3 align-items-end">
+			<input type="hidden" name="u_name" value="{{ u_name }}">
+			{% for item in u_role %}<input type="hidden" name="u_role" value="{{ item }}">{% endfor %}
+			<input type="hidden" name="t_location" value="{{ t_location }}">
+			{% for item in t_difficulty %}<input type="hidden" name="t_difficulty" value="{{ item }}">{% endfor %}
+			{% for item in t_status %}<input type="hidden" name="t_status" value="{{ item }}">{% endfor %}
+			<input type="hidden" name="t_start" value="{{ t_start }}">
+			<input type="hidden" name="t_end" value="{{ t_end }}">
+
+			<div class="col-md-3 col-sm-6">
+				<label for="b_trekker" class="form-label-trekky">Trekker Name/Email</label>
+				<input type="text" class="form-control-trekky" id="b_trekker" name="b_trekker" value="{{ b_trekker }}">
+			</div>
+			<div class="col-md-3 col-sm-6">
+				<label for="b_trek" class="form-label-trekky">Trek Name</label>
+				<input type="text" class="form-control-trekky" id="b_trek" name="b_trek" value="{{ b_trek }}">
+			</div>
+			<div class="col-md-2 col-sm-6">
+				<label for="b_staff" class="form-label-trekky">Assigned Staff</label>
+				<input type="text" class="form-control-trekky" id="b_staff" name="b_staff" value="{{ b_staff }}">
+			</div>
+			<div class="col-md-2 col-sm-6">
+				<label class="form-label-trekky">Status</label>
+				<div class="dropdown">
+					<button class="form-select-trekky text-start" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Select Statuses</button>
+					<div class="dropdown-menu filter-dropdown-menu">
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="b_status" value="Booked" id="bsBooked" {% if 'Booked' in b_status %}checked{% endif %}><label class="form-check-label" for="bsBooked">Booked</label></div>
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="b_status" value="Cancelled" id="bsCanc" {% if 'Cancelled' in b_status %}checked{% endif %}><label class="form-check-label" for="bsCanc">Cancelled</label></div>
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="b_status" value="Refunded" id="bsRef" {% if 'Refunded' in b_status %}checked{% endif %}><label class="form-check-label" for="bsRef">Refunded</label></div>
+						<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="b_status" value="Trek Abandoned" id="bsAband" {% if 'Trek Abandoned' in b_status %}checked{% endif %}><label class="form-check-label" for="bsAband">Trek Abandoned</label></div>
+						<div class="form-check"><input class="form-check-input" type="checkbox" name="b_status" value="Completed" id="bsComp" {% if 'Completed' in b_status %}checked{% endif %}><label class="form-check-label" for="bsComp">Completed</label></div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-2">
+				<button type="submit" class="btn-trekky-primary w-100 justify-content-center">Filter Bookings</button>
+			</div>
+		</form>
+	</div>
+
+	<div class="card-trekky mb-5 p-0" style="overflow:hidden;">
+		<div class="table-responsive" style="max-height:380px; overflow-y:auto;">
+			<table id="bookingsTable" class="table-trekky mb-0 w-100">
+				<thead>
+					<tr style="position:sticky; top:0; background-color:var(--bg-card); z-index:2; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('bookingsTable', 0, false)">ID <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('bookingsTable', 1, false)">Trekker <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('bookingsTable', 2, false)">Trek <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('bookingsTable', 3, false)">Staff <span class="sort-arrow"></span></th>
+						<th style="cursor:pointer; background-color:var(--bg-card);" onclick="sortTable('bookingsTable', 4, false)">Status <span class="sort-arrow"></span></th>
+						<th class="text-end" style="background-color:var(--bg-card);">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for booking in bookings %}
+					<tr>
+						<td><strong style="font-size:0.85rem;">{{ booking.booking_display_id }}</strong></td>
+						<td>{{ booking.user.user_full_name }} <span style="color:var(--muted); font-size:0.8rem;">({{ booking.user.user_display_id }})</span></td>
+						<td>
+							<a href="#" class="text-decoration-none" style="color:var(--ink); font-weight:500; border-bottom:1px dashed var(--border-strong); padding-bottom:1px;"
+								data-bs-toggle="modal" data-bs-target="#trekReviewsModal{{ booking.trek.trek_id }}" title="Click to view reviews">
+								{{ booking.trek.trek_name }}
+							</a>
+							<span style="color:var(--muted); font-size:0.8rem;">({{ booking.trek.trek_display_id }})</span>
+						</td>
+						<td>
+							{% if booking.trek.assigned_staff %}
+								{{ booking.trek.assigned_staff.staff_name }} <span style="color:var(--muted); font-size:0.8rem;">({{ booking.trek.assigned_staff.user.user_display_id }})</span>
+							{% else %}
+								<span style="color:var(--muted); font-style:italic;">Unassigned</span>
+							{% endif %}
+						</td>
+						<td>
+							{% if booking.booking_status == 'Booked' %}<span class="badge-trekky badge-success">Booked</span>
+							{% elif booking.booking_status == 'Refunded' %}<span class="badge-trekky badge-warning">Refunded</span>
+							{% elif booking.booking_status == 'Cancelled' %}<span class="badge-trekky badge-dark">Cancelled</span>
+							{% elif booking.booking_status == 'Trek Abandoned' %}<span class="badge-trekky badge-danger">Trek Abandoned</span>
+							{% elif booking.booking_status == 'Completed' %}<span class="badge-trekky badge-info">Completed</span>
+							{% else %}<span class="badge-trekky badge-secondary">{{ booking.booking_status }}</span>{% endif %}
+						</td>
+						<td class="text-end">
+							{% if booking.booking_status == 'Booked' %}
+								<form method="POST" action="{{ url_for('admin_booking_refund', booking_id=booking.booking_id) }}" class="d-inline"
+									onsubmit="return confirm('Refund this booking?');">
+									<button class="btn-trekky-outline btn-sm" style="padding:0.3rem 0.8rem; font-size:0.78rem; border-color:var(--danger); color:var(--danger);">Refund</button>
+								</form>
+							{% endif %}
+						</td>
+					</tr>
+					{% else %}
+					<tr><td colspan="6" class="text-center py-4" style="color:var(--muted); font-family:'DM Sans',sans-serif;">No bookings found.</td></tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+</div>
+
+<script>
+function sortTable(tableId, colIndex, isNumeric) {
+	var table = document.getElementById(tableId);
+	var tbody = table.tBodies[0];
+	var rows = Array.from(tbody.rows);
+	var currentDir = table.getAttribute('data-sort-dir') === 'asc' ? 'desc' : 'asc';
+	var currentCol = table.getAttribute('data-sort-col');
+	if (currentCol != colIndex) { currentDir = 'asc'; }
+	table.setAttribute('data-sort-dir', currentDir);
+	table.setAttribute('data-sort-col', colIndex);
+	rows.sort(function(a, b) {
+		var x = a.getElementsByTagName("TD")[colIndex].innerText.toLowerCase();
+		var y = b.getElementsByTagName("TD")[colIndex].innerText.toLowerCase();
+		if (isNumeric) {
+			x = parseFloat(x.replace(/[^0-9.-]+/g,"")) || 0;
+			y = parseFloat(y.replace(/[^0-9.-]+/g,"")) || 0;
+			return currentDir === 'asc' ? x - y : y - x;
+		} else {
+			if (x < y) return currentDir === 'asc' ? -1 : 1;
+			if (x > y) return currentDir === 'asc' ? 1 : -1;
+			return 0;
+		}
+	});
+	rows.forEach(function(row) { tbody.appendChild(row); });
+	var headers = table.tHead.rows[0].cells;
+	for (var i = 0; i < headers.length; i++) {
+		var arrowSpan = headers[i].querySelector('.sort-arrow');
+		if (arrowSpan) arrowSpan.innerHTML = '';
+	}
+	var activeHeader = headers[colIndex].querySelector('.sort-arrow');
+	if (activeHeader) { activeHeader.innerHTML = currentDir === 'asc' ? ' ↑' : ' ↓'; }
+}
+</script>
+{% endblock %}

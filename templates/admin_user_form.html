@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Create User — Trekky Admin{% endblock %}
+
+{% block content %}
+<div style="background-color:var(--bg-off); min-height:calc(100vh - 80px); padding:3rem 0;">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-lg-7 col-xl-6">
+				<div class="card-trekky">
+					<div class="mb-5">
+						<div class="eyebrow">User Management</div>
+						<h1 class="display-font" style="font-size:1.8rem; margin-bottom:0.5rem;">Create System User</h1>
+						<p style="font-family:'DM Sans',sans-serif; color:var(--muted); font-size:0.9rem; margin:0;">
+							Initialize a new staff or admin account directly.
+						</p>
+					</div>
+
+					<form method="POST" action="{{ url_for('admin_create_user') }}">
+						<div class="mb-4">
+							<label class="form-label-trekky">User ID</label>
+							<input type="text" class="form-control-trekky" value="Auto-Generated on Submission" readonly>
+						</div>
+
+						<div class="mb-4">
+							<label for="full_name" class="form-label-trekky">Full Name</label>
+							<input type="text" class="form-control-trekky" id="full_name" name="full_name" required>
+						</div>
+
+						<div class="mb-4">
+							<label for="email" class="form-label-trekky">Email Address</label>
+							<input type="email" class="form-control-trekky" id="email" name="email"
+								required pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Must be a valid email format.">
+						</div>
+
+						<div class="mb-4">
+							<label for="contact" class="form-label-trekky">Contact Number</label>
+							<input type="text" class="form-control-trekky" id="contact" name="contact"
+								required pattern="^\+91\d{10}$" title="Must be +91 followed exactly by 10 digits" value="+91">
+						</div>
+
+						<div class="mb-4">
+							<label for="dob" class="form-label-trekky">Date of Birth</label>
+							<input type="date" class="form-control-trekky" id="dob" name="dob"
+								max="{{ max_date }}" required>
+						</div>
+
+						<div class="mb-4">
+							<label for="role" class="form-label-trekky">System Role</label>
+							<select class="form-select-trekky" id="role" name="role" required>
+								<option value="" selected disabled>Select a role...</option>
+								<option value="staff">Staff Member</option>
+								<option value="admin">System Administrator</option>
+							</select>
+						</div>
+
+						<div class="mb-5">
+							<label for="password" class="form-label-trekky">Initial Password</label>
+							<input type="password" class="form-control-trekky" id="password" name="password"
+								required
+								pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+								title="Minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 digit, and 1 special character">
+						</div>
+
+						<button type="submit" class="btn-trekky-primary w-100 justify-content-center mb-3" style="padding:0.85rem;">
+							Initialize User Account
+						</button>
+						<a href="{{ url_for('admin_dashboard') }}" class="btn-trekky-outline w-100 justify-content-center" style="padding:0.85rem;">
+							Cancel Process
+						</a>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
